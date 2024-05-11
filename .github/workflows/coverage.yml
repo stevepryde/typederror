@@ -18,6 +18,7 @@ jobs:
           crate: cargo-tarpaulin
           version: latest
           use-tool-cache: true
+      - uses: actions/checkout@v2
       - name: Generate code coverage
         run: |
           cargo tarpaulin --verbose --timeout 120 --out Xml

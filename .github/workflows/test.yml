@@ -17,7 +17,7 @@ jobs:
         with:
           profile: minimal
           toolchain: ${{ matrix.toolchain }}
-          
+
       - uses: actions/checkout@v2
       - name: cargo test -- --test-threads=1
         uses: actions-rs/cargo@v1

@@ -19,6 +19,7 @@ jobs:
           version: latest
           use-tool-cache: true
 
+      - uses: actions/checkout@v2
       - name: cargo hack
         uses: actions-rs/cargo@v1
         with:
