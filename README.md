@@ -19,7 +19,7 @@ By using `TError`, you can specify the primary error type that the caller
 should match on. This has the effect of documenting the primary error type
 for your function.
 
-```ignore
+```rust
 fn my_fallible_function() -> typederror::Result<(), MyError> {
     // Do something that might fail.
     let s = std::fs::read_to_string("file.txt").map_err(|e| MyError::IoError(e))?;
@@ -38,7 +38,7 @@ underneath.
 You can also implement `DefaultError` so that all other errors are
 captured in a special "catch-all" variant of the primary error type.
 
-```ignore
+```rust
 #[derive(Debug, thiserror::Error)]
 enum MyError {
    #[error("IO error: {0}")]
@@ -61,7 +61,7 @@ convenience methods for downcasting to that type. This allows you to
 more easily work with errors of a single type without needing to match
 on several different error types.
 
-```ignore
+```rust
 if let Err(err) = my_fallible_function() { // returns Result<T, TError<MyError>>
     match err.get() {
         MyError::IoError(e) => { // e is of type `std::io::Error`
@@ -77,7 +77,7 @@ if let Err(err) = my_fallible_function() { // returns Result<T, TError<MyError>>
 You can also downcast to other types if needed, the same as you
 would with `anyhow`.
 
-```ignore
+```rust
 match err.downcast_ref::<serde::Error>() {
     Ok(e) => {
         // Handle serde error.
@@ -95,7 +95,7 @@ Or use `typederror::Result<T>` as the return type of your function.
 This will effectively work the same as `anyhow`, allowing you to
 write your code and worry about error types later.
 
-```ignore
+```rust
 fn do_something() -> typederror::Result<()> {
     // Do something.
     my_fallible_function()?;
@@ -119,7 +119,7 @@ Unfortunately the `?` operator cannot automatically convert error types
 to your primary error type.
 
 For example:
-```ignore
+```rust
 #[derive(Debug, thiserror::Error)]
 enum MyError {
     #[error("IO error: {0}")]
@@ -155,7 +155,7 @@ In the above example, the `?` operator will not automatically convert the
 `MyError::Misc` in the call to `e.get()`.
 
 To capture the `IoError` correctly, change the first line of the function to
-```ignore
+```rust
 let s = std::fs::read_to_string("file.txt").terror()?;
 ```
 
