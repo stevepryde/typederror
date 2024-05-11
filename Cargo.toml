@@ -4,7 +4,7 @@ version = "0.2.0"
 edition = "2021"
 authors = ["Steve Pryde <steve@stevepryde.com>"]
 description = "A wrapper around anyhow that allows for a primary error type"
-license = "MIT"
+license = "MIT OR Apache-2.0"
 
 homepage = "https://github.com/stevepryde/typederror"
 repository = "https://github.com/stevepryde/typederror"
