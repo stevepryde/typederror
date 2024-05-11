@@ -15,11 +15,6 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
-      - uses: actions/checkout@v2
-      - name: Install browsers
-        run: |
-          ./ci/ubuntu-latest-firefox
-          ./ci/ubuntu-latest-chrome
       - name: cargo update -Zminimal-versions
         uses: actions-rs/cargo@v1
         with:

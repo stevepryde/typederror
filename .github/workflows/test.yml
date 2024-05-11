@@ -5,6 +5,7 @@ on:
 name: cargo test
 jobs:
   test:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions-rs/toolchain@v1
         with:
