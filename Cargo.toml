@@ -1,6 +1,6 @@
 [package]
 name = "typederror"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Steve Pryde <steve@stevepryde.com>"]
 description = "A wrapper around anyhow that allows for a primary error type"

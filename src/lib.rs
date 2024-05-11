@@ -161,5 +161,7 @@ mod error;
 pub use error::*;
 pub mod macros;
 
-/// Re-export of anyhow crate. This is required to make the macros work.
-pub use anyhow;
+/// Re-export of anyhow macros.
+pub mod anyhow {
+    pub use anyhow::{anyhow, bail};
+}

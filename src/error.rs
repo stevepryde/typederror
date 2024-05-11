@@ -1,8 +1,19 @@
 use std::fmt::Display;
-use std::{error::Error, fmt::Debug};
+use std::{error::Error as StdError, fmt::Debug};
+
+#[derive(Debug)]
+pub struct SimpleError(pub String);
+
+impl Display for SimpleError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        Display::fmt(&self.0, f)
+    }
+}
+
+impl StdError for SimpleError {}
 
 /// Convenience type alias for `Result<T, TError<E>>`.
-pub type Result<T, E = ()> = std::result::Result<T, TError<E>>;
+pub type Result<T, E = SimpleError> = std::result::Result<T, TError<E>>;
 
 /// A wrapper around `anyhow::Error` that allows for downcasting to a specific error type.
 ///
@@ -11,7 +22,7 @@ pub type Result<T, E = ()> = std::result::Result<T, TError<E>>;
 /// parameter acts as documentation for the returned error type for
 /// the caller to match on, while the underlying anyhow::Error also
 /// allows for other errors to be captured along with any context.
-pub struct TError<E = ()> {
+pub struct TError<E = SimpleError> {
     phantom: std::marker::PhantomData<E>,
     error: anyhow::Error,
 }
@@ -31,6 +42,12 @@ impl<E> Display for TError<E> {
 impl<T> From<TError<T>> for anyhow::Error {
     fn from(err: TError<T>) -> Self {
         err.error
+    }
+}
+
+impl<T> From<TError<T>> for Box<dyn StdError> {
+    fn from(err: TError<T>) -> Self {
+        err.error.into()
     }
 }
 
@@ -106,7 +123,7 @@ impl<E: Debug + Display + Send + Sync + 'static> TError<E> {
 
 impl<E: Default + Debug + Display + Send + Sync + 'static> TError<E> {}
 
-impl<SRC: Error + Send + Sync + 'static, DST: Error + 'static> From<SRC> for TError<DST> {
+impl<SRC: StdError + Send + Sync + 'static, DST: StdError + 'static> From<SRC> for TError<DST> {
     fn from(err: SRC) -> Self {
         let error = anyhow::Error::new(err);
         Self {
@@ -137,7 +154,9 @@ pub trait Context<T, E, X: Display>: private::Sealed {
 
 impl<T, E> private::Sealed for std::result::Result<T, E> {}
 
-impl<T, E: Error + Send + Sync + 'static, X: Error> Context<T, E, X> for std::result::Result<T, E> {
+impl<T, E: StdError + Send + Sync + 'static, X: StdError> Context<T, E, X>
+    for std::result::Result<T, E>
+{
     fn context<C>(self, context: C) -> std::result::Result<T, TError<X>>
     where
         C: Display + Send + Sync + 'static,
@@ -216,7 +235,7 @@ mod tests {
         #[error("something went wrong")]
         One,
         #[error("Error two")]
-        Two(Box<dyn Error + Send + Sync + 'static>),
+        Two(Box<dyn StdError + Send + Sync + 'static>),
         #[error("io error: {0}")]
         Three(#[from] std::io::Error),
     }
@@ -236,7 +255,7 @@ mod tests {
         }
     }
 
-    impl Error for OtherError {}
+    impl StdError for OtherError {}
 
     fn do_other_task(fail: bool) -> std::result::Result<(), OtherError> {
         if fail {
