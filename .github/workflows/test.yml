@@ -1,0 +1,17 @@
+on:
+  push:
+    branches: [main]
+  pull_request:
+name: cargo test
+jobs:
+  test:
+    steps:
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: ${{ matrix.toolchain }}
+      - uses: actions/checkout@v2
+      - name: cargo test -- --test-threads=1
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
