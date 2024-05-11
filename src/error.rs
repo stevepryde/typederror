@@ -45,7 +45,7 @@ impl<E: Debug + Display + Send + Sync + 'static> TError<E> {
     pub fn from_msg(msg: &str) -> Self {
         Self {
             phantom: std::marker::PhantomData,
-            error: anyhow::anyhow!("{msg}"),
+            error: anyhow::anyhow!("{}", msg),
         }
     }
 

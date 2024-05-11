@@ -39,3 +39,4 @@ jobs:
         if: always()
         with:
           args: --all-features
+          token: ${{ secrets.GITHUB_TOKEN }}
