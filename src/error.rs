@@ -2,7 +2,7 @@ use std::fmt::Display;
 use std::{error::Error, fmt::Debug};
 
 /// Convenience type alias for `Result<T, TError<E>>`.
-pub type Result<T, E> = std::result::Result<T, TError<E>>;
+pub type Result<T, E = ()> = std::result::Result<T, TError<E>>;
 
 /// A wrapper around `anyhow::Error` that allows for downcasting to a specific error type.
 ///
@@ -11,7 +11,7 @@ pub type Result<T, E> = std::result::Result<T, TError<E>>;
 /// parameter acts as documentation for the returned error type for
 /// the caller to match on, while the underlying anyhow::Error also
 /// allows for other errors to be captured along with any context.
-pub struct TError<E> {
+pub struct TError<E = ()> {
     phantom: std::marker::PhantomData<E>,
     error: anyhow::Error,
 }
@@ -39,6 +39,13 @@ impl<E: Debug + Display + Send + Sync + 'static> TError<E> {
         Self {
             phantom: std::marker::PhantomData,
             error,
+        }
+    }
+
+    pub fn from_msg(msg: &str) -> Self {
+        Self {
+            phantom: std::marker::PhantomData,
+            error: anyhow::anyhow!("{msg}"),
         }
     }
 
@@ -179,6 +186,25 @@ impl<E: DefaultError + Debug + Display + Send + Sync + 'static> TError<E> {
     }
 }
 
+/// Trait to convert something to a `Result<T, TError<E>>`.
+pub trait IntoTError<T, E>: private::Sealed {
+    fn terror(self) -> std::result::Result<T, TError<E>>;
+}
+
+impl<T, EIn, EOut> IntoTError<T, EOut> for std::result::Result<T, EIn>
+where
+    EIn: Into<EOut>,
+    EOut: std::error::Error + Send + Sync + 'static,
+{
+    /// Convert `Result<T, EIn>` into `Result<T, TError<EOut>>` where `EIn: Into<EOut>`.
+    fn terror(self) -> std::result::Result<T, TError<EOut>> {
+        self.map_err(|e| TError {
+            phantom: std::marker::PhantomData,
+            error: anyhow::Error::new(e.into()),
+        })
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use assert_matches::assert_matches;
@@ -191,6 +217,8 @@ mod tests {
         One,
         #[error("Error two")]
         Two(Box<dyn Error + Send + Sync + 'static>),
+        #[error("io error: {0}")]
+        Three(#[from] std::io::Error),
     }
 
     impl DefaultError for MyError {
@@ -243,5 +271,13 @@ mod tests {
         assert_matches!(err.get_ref(), None);
         assert_eq!(err.downcast_ref(), Some(&OtherError));
         assert_matches!(err.get(), MyError::Two(_)); // We got some other error.
+    }
+
+    #[test]
+    fn test_terror() {
+        let path = std::path::Path::new("/invalid-dir-doesnt-exist");
+        // Using the `.terror()` method, we can convert into `MyError` instead of `std::io::Error`.
+        let err: TError<MyError> = std::fs::read_to_string(path).terror().unwrap_err();
+        assert_matches!(err.get_ref(), Some(&MyError::Three(_)));
     }
 }
