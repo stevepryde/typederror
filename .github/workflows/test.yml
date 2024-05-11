@@ -6,11 +6,18 @@ name: cargo test
 jobs:
   test:
     runs-on: ubuntu-latest
+    name: ${{ matrix.toolchain }}
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [stable, beta]
+
     steps:
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: ${{ matrix.toolchain }}
+          
       - uses: actions/checkout@v2
       - name: cargo test -- --test-threads=1
         uses: actions-rs/cargo@v1

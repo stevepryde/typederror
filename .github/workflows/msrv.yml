@@ -12,6 +12,7 @@ jobs:
           profile: minimal
           toolchain: 1.69.0
           override: true
+          
       - uses: actions/checkout@v2
       - name: cargo +1.69.0 check
         uses: actions-rs/cargo@v1

@@ -11,16 +11,19 @@ jobs:
         with:
           profile: minimal
           toolchain: nightly
+
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
           toolchain: stable
+
       - name: cargo update -Zminimal-versions
         uses: actions-rs/cargo@v1
         with:
           command: update
           toolchain: nightly
           args: -Zminimal-versions
+          
       - name: cargo test
         uses: actions-rs/cargo@v1
         with:

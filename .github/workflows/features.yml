@@ -11,13 +11,14 @@ jobs:
         with:
           profile: minimal
           toolchain: stable
-      - uses: actions/checkout@v2
+
       - name: Install cargo-hack
         uses: actions-rs/install@v0.1
         with:
           crate: cargo-hack
           version: latest
           use-tool-cache: true
+
       - name: cargo hack
         uses: actions-rs/cargo@v1
         with:
