@@ -224,6 +224,22 @@ where
     }
 }
 
+/// Trait to wrap a `Result<T, TError<A>>` with `Result<T, TError<B>>`.
+pub trait WrapTError<T, E>: private::Sealed {
+    fn change_err(self) -> std::result::Result<T, TError<E>>;
+}
+
+impl<T, EIn, EOut> WrapTError<T, EOut> for std::result::Result<T, TError<EIn>>
+where
+    EIn: std::error::Error + Send + Sync + 'static,
+    EOut: std::error::Error + Send + Sync + 'static,
+{
+    /// Convert `Result<T, EIn>` into `Result<T, TError<EOut>>` where `EIn: Into<EOut>`.
+    fn change_err(self) -> std::result::Result<T, TError<EOut>> {
+        self.map_err(|e| e.change_err())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use assert_matches::assert_matches;
@@ -298,5 +314,19 @@ mod tests {
         // Using the `.terror()` method, we can convert into `MyError` instead of `std::io::Error`.
         let err: TError<MyError> = std::fs::read_to_string(path).terror().unwrap_err();
         assert_matches!(err.get_ref(), Some(&MyError::Three(_)));
+    }
+
+    #[test]
+    fn test_change_err() {
+        let err = fallible_fn(true).unwrap_err();
+        let err: TError<OtherError> = err.change_err();
+        assert_eq!(err.try_get().unwrap(), OtherError);
+    }
+
+    #[test]
+    fn test_change_err_result() {
+        let err = fallible_fn(true);
+        let err: std::result::Result<(), TError<OtherError>> = err.change_err();
+        assert_eq!(err.unwrap_err().try_get().unwrap(), OtherError);
     }
 }
