@@ -161,6 +161,12 @@ mod error;
 pub use error::*;
 pub mod macros;
 
+pub mod prelude {
+    pub use crate::error::{Context, DefaultError, IntoTError, TError, WrapTError};
+    pub use crate::terror;
+    pub use crate::Result as TEResult;
+}
+
 /// Re-export of anyhow macros.
 pub mod anyhow {
     pub use anyhow::{anyhow, bail};
